@@ -1,0 +1,62 @@
+name: Build Windows
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Build with Nuitka
+        run: >
+          python -m nuitka
+          --quiet
+          --standalone
+          --python-flag=no_site
+          --user-plugin=CyalPlugin.py
+          --windows-disable-console
+          --windows-force-stderr=%program%final_hour.log
+          --windows-force-stdout=%program%final_hour.log
+          final_hour.py
+
+      - name: Assemble distribution
+        shell: cmd
+        run: |
+          mkdir final_hour
+          mkdir final_hour\data
+          xcopy /S /Q dlls_windows\* final_hour\
+          copy *.mhr final_hour\
+          copy default_keyconfig.json final_hour\
+          xcopy /E /I /Q final_hour.dist final_hour
+          xcopy /E /I /Q data final_hour\data\
+          xcopy /E /I /Q urlextract final_hour\urlextract\
+          rmdir /s /q final_hour.dist
+          rmdir /s /q final_hour.build
+
+      - name: Zip distribution
+        run: Compress-Archive -Path final_hour -DestinationPath final_hour.zip
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: final_hour-windows
+          path: final_hour.zip
+          retention-days: 30
+
+      - name: Upload release asset
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: final_hour.zip

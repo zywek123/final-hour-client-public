@@ -1,0 +1,20 @@
+pygame
+pyenet
+pyperclip
+nuitka
+cryptography
+semver
+pysmartdl
+requests
+texteditor
+appdirs
+urlextract
+linkpreview
+psutil
+accessible_output2
+dasbus; sys_platform == "linux"
+PyGObject; sys_platform == "linux"
+urllib3
+pydub
+cyal
+pyogg @ git+https://github.com/TeamPyOgg/PyOgg@master
