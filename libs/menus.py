@@ -7,60 +7,55 @@ from .os_tools import get_os
 import pygame
 import cyal.util
 
-def linux_change_speech_module(game, func_call, replace_call = None, parent=None):
-    def set_module(module):
-        speech.linux_speaker.set_output_module(module)
-        options.set("linux_speech_module", module) 
-
-    modules_menu = menu.Menu(game, "Select your speech module", parrent=parent)
-    set_default_sounds(modules_menu)
-    items = []
-    for i in speech.linux_speaker.list_output_modules():
-        items.append((i, functools.partial(set_module, i)))
-    items.append(("back", func_call))
-    modules_menu.add_items(items)
-    if replace_call is None: (modules_menu)
-    else: replace_call(modules_menu)
-
-
 def linux_change_rate(game, func_call, replace_call=None):
     def set_rate(rate):
         try:
-            speech.linux_speaker.set_rate(int(rate))
-            options.set("linux_speech_rate", int(rate)) 
+            value = int(rate)
+            if not 0 <= value <= 100:
+                raise ValueError
+            speech.linux_speaker.Rate = value
+            options.set("linux_speech_rate", value)
             speech.speak("Done!")
         except ValueError:
-            speech.speak("Input a valid number please?")
+            speech.speak("Input a number between 0 and 100.")
         func_call()
 
     if replace_call is None: replace_call = game.replace
-    replace_call(game.input.run("Input the rate you want to set", handeler=set_rate))
+    replace_call(game.input.run(f"Speech rate (0-100, current: {options.get('linux_speech_rate', 50)})", handeler=set_rate))
 
 
 def linux_change_pitch(game, func_call, replace_call=None):
     def set_pitch(pitch):
         try:
-            speech.linux_speaker.set_pitch(int(pitch))
-            options.set("linux_speech_pitch", int(pitch))
+            value = float(pitch)
+            if not 0.0 <= value <= 10.0:
+                raise ValueError
+            speech.linux_speaker.Pitch = value
+            options.set("linux_speech_pitch", value)
+            speech.speak("Done!")
         except ValueError:
-            speech.speak("Input a valid number please?")
+            speech.speak("Input a number between 0.0 and 10.0.")
         func_call()
 
     if replace_call is None: replace_call = game.replace
-    replace_call(game.input.run("Input the pitch you want to set", handeler=set_pitch))
+    replace_call(game.input.run(f"Speech pitch (0.0-10.0, current: {options.get('linux_speech_pitch', 5.0)})", handeler=set_pitch))
 
 
 def linux_change_volume(game, func_call, replace_call=None):
     def set_volume(volume):
         try:
-            speech.linux_speaker.set_volume(int(volume))
-            options.set("linux_speech_volume", int(volume))
+            value = float(volume)
+            if not 0.0 <= value <= 10.0:
+                raise ValueError
+            speech.linux_speaker.Volume = value
+            options.set("linux_speech_volume", value)
+            speech.speak("Done!")
         except ValueError:
-            speech.speak("Input a valid number please?")
+            speech.speak("Input a number between 0.0 and 10.0.")
         func_call()
 
     if replace_call is None: replace_call = game.replace
-    replace_call(game.input.run("Input the volume you want to set", handeler=set_volume))
+    replace_call(game.input.run(f"Speech volume (0.0-10.0, current: {options.get('linux_speech_volume', 10.0)})", handeler=set_volume))
 
 
 def main_menu(game):
@@ -136,6 +131,12 @@ def options_menu(game, func_call, replace_call=None, parent=None, in_game=False)
         ("reset your location template to default", lambda: options.set("location_template",             "{x}, \r\n{y}, \r\n{z}, \r\nOn {tile} \r\nFacing {direction} at {angle} degrees with a pitch of {pitch} degrees. \r\nYou are leaning by {lean} degrees and you are {balanced}. ")),
         ("Configure key bindings.", lambda: keyconfig_menu(game, func_call=func_call if in_game else lambda: options_menu(game, func_call, in_game=in_game), replace_call=replace_call, parent=parent, in_game=in_game)),
     ]
+    if get_os() == consts.OS_LINUX:
+        items += [
+            ("Speech rate", lambda: linux_change_rate(game, func_call, replace_call)),
+            ("Speech pitch", lambda: linux_change_pitch(game, func_call, replace_call)),
+            ("Speech volume", lambda: linux_change_volume(game, func_call, replace_call)),
+        ]
     items.append(("Back", lambda: func_call()))
     m.add_items(items)
     if replace_call is None: game.replace(m)
