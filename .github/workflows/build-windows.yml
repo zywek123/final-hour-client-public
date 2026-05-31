@@ -23,6 +23,7 @@ jobs:
         run: >
           python -m nuitka
           --quiet
+          --assume-yes-for-downloads
           --standalone
           --python-flag=no_site
           --user-plugin=CyalPlugin.py
