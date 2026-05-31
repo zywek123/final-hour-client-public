@@ -165,15 +165,20 @@ class Game:
 
     def login(self):
         if "__compiled__" in globals():
-            speak("Checking version...")
-            request = requests.get(
-                "https://final-hour.net/latest_version.txt"
-            )
-            request.raise_for_status()
-            latest_version = request.text.strip()
-            if version.compare(latest_version):
+            try:
+                speak("Checking version...")
+                request = requests.get(
+                    "https://0777.pl/latest_version.txt", timeout=10
+                )
+                request.raise_for_status()
+                latest_version = request.text.strip()
+                if version.compare(latest_version):
+                    menus.main_menu(self)
+                    speak(f"You are not on the latest version, you are on {version.major}.{version.minor}.{version.patch}, you need to update to {latest_version}")
+                    return
+            except requests.exceptions.RequestException:
                 menus.main_menu(self)
-                speak(f"You are not on the latest version, you are on {version.major}.{version.minor}.{version.patch}, you need to update to {latest_version}")
+                speak("Could not check for updates. Please check your internet connection.")
                 return
 
         username = options.get("username")

@@ -18,7 +18,7 @@ class Updater(state.State):
         self.check = check
         try:
             self.downloader = dl.SmartDL(
-                "https://final-hour.net/fh.zip",
+                "https://0777.pl/fh.zip",
                 threads=2,
                 progress_bar=False,
                 timeout=10,
@@ -34,7 +34,7 @@ class Updater(state.State):
             if self.check:
                 speak("Checking version...")
                 request = requests.get(
-                    "https://final-hour.net/latest_version.txt"
+                    "https://0777.pl/latest_version.txt", timeout=10
                 )
                 request.raise_for_status()
                 latest_version = request.text.strip()
@@ -47,9 +47,9 @@ class Updater(state.State):
                 speak("The download is starting...")
                 self.downloader.start(blocking=False)
                 self.replace_last_substate(self.downloading_menu())
-        except Exception as e:
-            speak(f"Error while trying to fetch the latest version: {e}")
-            self.game.exit()
+        except requests.exceptions.RequestException:
+            menus.main_menu(self.game)
+            speak("Could not check for updates, continuing...", False)
 
     def exit(self):
         super().exit()
