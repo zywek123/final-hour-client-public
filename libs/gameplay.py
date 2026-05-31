@@ -88,8 +88,8 @@ class Gameplay(state.State):
             kc.get("reset_pitch", pygame.K_l): self.reset_pitch,
             kc.get("reset_bank", pygame.K_SEMICOLON): self.reset_bank,
             pygame.K_F4: self.toggle_sonar_and_force_quit,
-            kc.get("strafe_left", pygame.K_q): lambda mod: self.strafe_left(mod),
-            kc.get("strafe_right", pygame.K_e): lambda mod: self.strafe_right(mod),
+            kc.get("strafe_left", pygame.K_q): lambda mod: self.strafe_left(mod, True),
+            kc.get("strafe_right", pygame.K_e): lambda mod: self.strafe_right(mod, True),
             kc.get("quit", pygame.K_ESCAPE): self.ask_to_exit,
             kc.get("ping", pygame.K_F3): self.ping,
             kc.get("who_online", pygame.K_F1): self.who_online,
@@ -327,9 +327,14 @@ class Gameplay(state.State):
         self.game.network.send(consts.CHANNEL_MISC, "who_online", {})
 
     # movement
-    def strafe_left(self, mod):
+    def strafe_left(self, mod, turn=False):
         if self.player.locked:
             return
+        if turn:
+            if not self.turn_mod:
+                return self.turn_start(mod)
+            self.turning = True
+            return self.player.face(self.player.hfacing - 45, self.player.vfacing)
         if (
             not self.turn_mod
             and self.player.turning_clock.elapsed >= self.player.turntime
@@ -341,9 +346,14 @@ class Gameplay(state.State):
             if self.player.hfacing % 45 == 0:
                 speak(string_utils.direction(self.player.hfacing))
 
-    def strafe_right(self, mod):
+    def strafe_right(self, mod, turn=False):
         if self.player.locked:
             return
+        if turn:
+            if not self.turn_mod:
+                return self.turn_start(mod)
+            self.turning = True
+            return self.player.face(self.player.hfacing + 45, self.player.vfacing)
         if (
             not self.turn_mod
             and self.player.turning_clock.elapsed >= self.player.turntime
@@ -370,9 +380,6 @@ class Gameplay(state.State):
             self.player.walk(mode=mode, send=True)
 
     def move_left(self, mod, turn=False):
-        if turn and self.turn_mod:
-            self.turning = True
-            return self.player.face(self.player.hfacing - 45, self.player.vfacing)
         tile_factor = 3.0 if self.map.get_tile_at(self.player.x, self.player.y, self.player.z) in ["deep_water", "underwater"] else 1.0
         if self.player.movement_clock.elapsed >= self.player.movetime * tile_factor:
             self.player.movement_clock.restart()
@@ -394,9 +401,6 @@ class Gameplay(state.State):
             self.player.walk(back=True, mode=mode, send=True)
 
     def move_right(self, mod, turn=False):
-        if turn and self.turn_mod:
-            self.turning = True
-            return self.player.face(self.player.hfacing + 45, self.player.vfacing)
         tile_factor = 3.0 if self.map.get_tile_at(self.player.x, self.player.y, self.player.z) in ["deep_water", "underwater"] else 1.0
         if self.player.movement_clock.elapsed >= self.player.movetime * tile_factor:
             self.player.movement_clock.restart()

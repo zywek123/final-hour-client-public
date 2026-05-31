@@ -101,8 +101,8 @@ class AudioManager():
                     try:
                         with open(f"data/{path}", 'wb+') as f:
                             f.write(data.content)
-                    except e:
-                        print(e)
+                    except Exception as e:
+                        print(f"unable to save server sound {path}: {e}")
         if path.split("/")[0] != "data": path= f"data/{path}"
         if not path.endswith(".ogg"): path = path_utils.random_item(path)
         path = os.path.realpath(path)
@@ -127,8 +127,8 @@ class AudioManager():
             )
             self.buffers[path] = buffer
             return buffer
-        except:
-            print("unable to load file")
+        except Exception as e:
+            print(f"unable to load file: {path!r} — {type(e).__name__}: {e}")
             return None
 
     def set_volume(self, cat, volume):

@@ -51,21 +51,27 @@ class Entity(Object):
             self.radio_source.position = (0,0,0)
             self.radio_source.relative = True
             self.radio_source.gain=0.7
-            eq_slot = self.soundgroup.parent.gen_effect(
-                "EQUALIZER",
-                ("low_gain", 0.126),
-                ("low_cutoff", 800.0),
-                ("high_gain", 0.126),
-                ("high_cutoff", 4000.0)
-            )
-            self.distortion_slot = self.soundgroup.parent.gen_effect(
-                "DISTORTION",
-                ("edge", 0.5),
-                ("gain", 0.2)
-            )
-            if self.distortion_slot is not None: self.distortion_slot.target = eq_slot
-            self.soundgroup.parent.efx.send(self.radio_source, 1, self.distortion_slot)
+            try:
+                eq_slot = self.soundgroup.parent.gen_effect(
+                    "EQUALIZER",
+                    ("low_gain", 0.126),
+                    ("low_cutoff", 800.0),
+                    ("high_gain", 0.126),
+                    ("high_cutoff", 4000.0)
+                )
+                self.distortion_slot = self.soundgroup.parent.gen_effect(
+                    "DISTORTION",
+                    ("edge", 0.5),
+                    ("gain", 0.2)
+                )
+                if self.distortion_slot is not None: self.distortion_slot.target = eq_slot
+                self.soundgroup.parent.efx.send(self.radio_source, 1, self.distortion_slot)
+                print(f"vc effects ok for {self.name!r} (eq={eq_slot}, distortion={self.distortion_slot})")
+            except Exception as e:
+                print(f"vc effects failed for {self.name!r}: {type(e).__name__}: {e}")
+                self.distortion_slot = None
             self.vc_compression = voice_chat.voice_chat_compression(self.game)
+            print(f"vc_compression created for {self.name!r}")
 
 
 

@@ -359,10 +359,15 @@ class EventHandeler:
 
     def process_voice_data(self, data, channelID):
         if not options.get("voice_chat", True): return
-        if channelID in self.gameplay.voice_channels.keys():
-            vc_source = self.gameplay.voice_channels[channelID].vc_source
-            radio_source = self.gameplay.voice_channels[channelID].radio_source
-            self.gameplay.voice_channels[channelID].vc_compression.recieve(data, vc_source, radio_source, channelID, self.gameplay)
+        if channelID not in self.gameplay.voice_channels.keys():
+            return
+        entity = self.gameplay.voice_channels[channelID]
+        if not hasattr(entity, 'vc_compression'):
+            print(f"voice data on channel {channelID} — entity {entity.name!r} has no vc_compression")
+            return
+        vc_source = entity.vc_source
+        radio_source = entity.radio_source
+        entity.vc_compression.recieve(data, vc_source, radio_source, channelID, self.gameplay)
 
     def has_radio(self, data):
         if data["channel"] not in self.gameplay.voice_channels.keys(): return

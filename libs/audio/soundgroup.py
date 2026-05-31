@@ -105,8 +105,8 @@ class SoundGroup:
     def play(self, path, looping=False, id="", dist=False, cat="miscelaneous", rel_x=0, rel_y=0, rel_z=0, volume=100, ):
         if self.parent.muted and not looping or self.parent.muted and id not in ["", None]: return
         buffer = self.parent.load_buffer(path)
-        if not buffer: 
-            print("unable to load buffer")
+        if not buffer:
+            print(f"unable to load buffer: {path!r}")
             return None
         if cat not in self.parent.volume_categories.keys() or cat == "master": cat = "miscelaneous"
         try: 

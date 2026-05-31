@@ -75,9 +75,17 @@ class VoiceChatRecord(threading.Thread):
         self.capture_ext = cyal.CaptureExtension()
         device = options.get("audio_input_device", 'system default')
         if device == 'system default': device = self.capture_ext.default_device.decode('utf-8')
-        try: self.audio_input = self.capture_ext.open_device(name=device.encode(), sample_rate=48000)
-        except cyal.exceptions.DeviceNotFoundError: 
+        print(f"voice chat: opening audio input device: {device!r}")
+        try:
+            self.audio_input = self.capture_ext.open_device(name=device.encode(), sample_rate=48000)
+            print(f"voice chat: audio input opened ok")
+        except cyal.exceptions.DeviceNotFoundError:
             self.audio_input = None
+            print(f"voice chat: device not found: {device!r}")
+            speak(f"Failed to load audio device: {device}")
+        except Exception as e:
+            self.audio_input = None
+            print(f"voice chat: failed to open device {device!r}: {type(e).__name__}: {e}")
             speak(f"Failed to load audio device: {device}")
         self.vc_compression = voice_chat_compression(self.game)
         self.recording = False
