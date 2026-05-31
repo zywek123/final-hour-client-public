@@ -26,9 +26,9 @@ jobs:
           --standalone
           --python-flag=no_site
           --user-plugin=CyalPlugin.py
-          --windows-disable-console
-          --windows-force-stderr=%program%final_hour.log
-          --windows-force-stdout=%program%final_hour.log
+          --windows-console-mode=disable
+          --force-stderr-spec={PROGRAM_BASE}.err.txt
+          --force-stdout-spec={PROGRAM_BASE}.out.txt
           final_hour.py
 
       - name: Assemble distribution
