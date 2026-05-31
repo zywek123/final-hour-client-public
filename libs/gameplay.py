@@ -88,14 +88,8 @@ class Gameplay(state.State):
             kc.get("reset_pitch", pygame.K_l): self.reset_pitch,
             kc.get("reset_bank", pygame.K_SEMICOLON): self.reset_bank,
             pygame.K_F4: self.toggle_sonar_and_force_quit,
-            kc.get("strafe_left", pygame.K_q): lambda mod: (
-                setattr(self, "can_run", False),
-                self.run_stop(mod),
-            ),
-            kc.get("strafe_right", pygame.K_e): lambda mod: (
-                setattr(self, "can_run", False),
-                self.run_stop(mod),
-            ),
+            kc.get("strafe_left", pygame.K_q): lambda mod: self.strafe_left(mod),
+            kc.get("strafe_right", pygame.K_e): lambda mod: self.strafe_right(mod),
             kc.get("quit", pygame.K_ESCAPE): self.ask_to_exit,
             kc.get("ping", pygame.K_F3): self.ping,
             kc.get("who_online", pygame.K_F1): self.who_online,
@@ -136,14 +130,10 @@ class Gameplay(state.State):
         }
         self.keys_released = {
             kc.get("voice_chat", pygame.K_g): self.voice_chat_stop,
-            kc.get("strafe_left", pygame.K_q): lambda mod: (
-                setattr(self, "can_run", True)
-            ),
-            kc.get("strafe_right", pygame.K_e): lambda mod: (
-                setattr(self, "can_run", True)
-            ),
-            kc.get("move_left", pygame.K_a): self.turn_stop,
-            kc.get("move_right", pygame.K_d): self.turn_stop,
+            kc.get("strafe_left", pygame.K_q): self.turn_stop,
+            kc.get("strafe_right", pygame.K_e): self.turn_stop,
+            kc.get("move_left", pygame.K_a): lambda mod: None,
+            kc.get("move_right", pygame.K_d): lambda mod: None,
             kc.get("pitch_down", pygame.K_k): self.pitch_stop,
             kc.get("pitch_up", pygame.K_j): self.pitch_stop,
             kc.get("run", pygame.K_LSHIFT): self.run_stop,
@@ -338,16 +328,32 @@ class Gameplay(state.State):
 
     # movement
     def strafe_left(self, mod):
-        tile_factor = 3.0 if self.map.get_tile_at(self.player.x, self.player.y, self.player.z) in ["deep_water", "underwater"] else 1.0
-        if self.player.movement_clock.elapsed >= self.player.movetime * tile_factor:
-            self.player.movement_clock.restart()
-            self.player.walk(left=True, send=True)
+        if self.player.locked:
+            return
+        if (
+            not self.turn_mod
+            and self.player.turning_clock.elapsed >= self.player.turntime
+        ):
+            self.player.turning_clock.restart()
+            self.turning = True
+            amount = 2 if self.running else 1
+            self.player.face(self.player.hfacing - amount, self.player.vfacing)
+            if self.player.hfacing % 45 == 0:
+                speak(string_utils.direction(self.player.hfacing))
 
     def strafe_right(self, mod):
-        tile_factor = 3.0 if self.map.get_tile_at(self.player.x, self.player.y, self.player.z) in ["deep_water", "underwater"] else 1.0
-        if self.player.movement_clock.elapsed >= self.player.movetime * tile_factor:
-            self.player.movement_clock.restart()
-            self.player.walk(right=True, send=True)
+        if self.player.locked:
+            return
+        if (
+            not self.turn_mod
+            and self.player.turning_clock.elapsed >= self.player.turntime
+        ):
+            self.player.turning_clock.restart()
+            self.turning = True
+            amount = 2 if self.running else 1
+            self.player.face(self.player.hfacing + amount, self.player.vfacing)
+            if self.player.hfacing % 45 == 0:
+                speak(string_utils.direction(self.player.hfacing))
 
     def move_forward(self, mod, turn=False):
         if turn and self.turn_mod:
@@ -364,23 +370,13 @@ class Gameplay(state.State):
             self.player.walk(mode=mode, send=True)
 
     def move_left(self, mod, turn=False):
-        if self.player.locked:
-            return
-        if turn:
-            if not self.turn_mod:
-                return self.turn_start(mod)
+        if turn and self.turn_mod:
             self.turning = True
             return self.player.face(self.player.hfacing - 45, self.player.vfacing)
-        if (
-            not self.turn_mod
-            and self.player.turning_clock.elapsed >= self.player.turntime
-        ):
-            self.player.turning_clock.restart()
-            self.turning = True
-            amount=2 if self.running else 1
-            self.player.face(self.player.hfacing - amount, self.player.vfacing)
-            if self.player.hfacing % 45 == 0:
-                speak(string_utils.direction(self.player.hfacing))
+        tile_factor = 3.0 if self.map.get_tile_at(self.player.x, self.player.y, self.player.z) in ["deep_water", "underwater"] else 1.0
+        if self.player.movement_clock.elapsed >= self.player.movetime * tile_factor:
+            self.player.movement_clock.restart()
+            self.player.walk(left=True, send=True)
 
     def move_back(self, mod, turn=False):
         if turn and self.turn_mod:
@@ -398,23 +394,13 @@ class Gameplay(state.State):
             self.player.walk(back=True, mode=mode, send=True)
 
     def move_right(self, mod, turn=False):
-        if self.player.locked:
-            return
-        if turn:
-            if not self.turn_mod:
-                return self.turn_start(mod)
+        if turn and self.turn_mod:
             self.turning = True
             return self.player.face(self.player.hfacing + 45, self.player.vfacing)
-        if (
-            not self.turn_mod
-            and self.player.turning_clock.elapsed >= self.player.turntime
-        ):
-            self.player.turning_clock.restart()
-            self.turning = True
-            amount=2 if self.running else 1
-            self.player.face(self.player.hfacing + amount, self.player.vfacing)
-            if self.player.hfacing % 45 == 0:
-                speak(string_utils.direction(self.player.hfacing))
+        tile_factor = 3.0 if self.map.get_tile_at(self.player.x, self.player.y, self.player.z) in ["deep_water", "underwater"] else 1.0
+        if self.player.movement_clock.elapsed >= self.player.movetime * tile_factor:
+            self.player.movement_clock.restart()
+            self.player.walk(right=True, send=True)
 
     def move_up(self, mod):
         tile_factor = 3.0 if self.map.get_tile_at(self.player.x, self.player.y, self.player.z) in ["deep_-water", "underwater"] else 1.0
