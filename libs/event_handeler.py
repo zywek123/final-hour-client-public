@@ -332,12 +332,15 @@ class EventHandeler:
     def exit_match(self, data):
         self.gameplay.player.lock_weapon = True
 
-    def login_failed(self, data):
-        if not data:
-            return
+    def login_fail(self, data):
         self.game.pop()
         menus.main_menu(self.game)
-        speak(data["message"])
+        speak("Login failed. Check your credentials or create a new account.")
+
+    def login_failed(self, data):
+        self.game.pop()
+        menus.main_menu(self.game)
+        speak(data["message"] if data and "message" in data else "Login failed.")
 
 
     def double_tap_root_beer(self, data):

@@ -240,7 +240,11 @@ class Gameplay(state.State):
                 if x == 0:
                     self.turn_stop(pygame.K_a)
                 if x < -1 or x > 1:
+                    self.turning = True
                     self.player.face(self.player.hfacing + (x / 2), self.player.vfacing)
+                    self.player.play_sound("foley/turn/end.ogg", cat="self")
+                    if self.player.hfacing % 45 == 0:
+                        speak(string_utils.direction(self.player.hfacing))
 
         if self.game.mouse_buttons["left"]:
             self.wmanager.reload()
@@ -463,8 +467,6 @@ class Gameplay(state.State):
         self.player.play_sound("foley/turn/start.ogg", cat="self")
 
     def turn_stop(self, mod):
-        if not self.turning:
-            return
         self.turning = False
         if not self.player.locked:
             self.player.play_sound("foley/turn/stop.ogg", cat="self")

@@ -259,7 +259,7 @@ class Entity(Object):
                 else:
                     self.depth = 0.0
                     self.limit_depth-=0.1
-            if not self.in_water: self.face(random(-45, 45), random(-45, 45), random(-45, 45))
+
             self.fall_distance += 1
             if not self.map.in_bound(self.x, self.y, self.z):
                 self.fall_stop()
