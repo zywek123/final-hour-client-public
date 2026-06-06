@@ -171,11 +171,7 @@ class Gameplay(state.State):
         if self.player.in_water and self.player.drown_clock.elapsed>=3000 and not self.player.dead and self.player.drownable and not self.player.lock_weapon: 
             self.player.hp -= 5
             self.player.play_sound("foley/swim/drown/", looping=False, id="drown", volume=100, cat="self")
-            self.game.network.send(
-                consts.CHANNEL_MISC,
-                "set_hp",
-                {"amount": self.player.hp}
-            )
+            self.game.network.send(consts.CHANNEL_MISC, "drown", {})
             self.player.drown_clock.restart()
         for entity in self.map.entities.values(): 
             entity.player_dead=True if self.player.dead else False
@@ -338,7 +334,9 @@ class Gameplay(state.State):
             if not self.turn_mod:
                 return self.turn_start(mod)
             self.turning = True
-            return self.player.face(self.player.hfacing - 45, self.player.vfacing)
+            h = self.player.hfacing
+            target = (h // 45) * 45 if h % 45 != 0 else h - 45
+            return self.player.face(target, self.player.vfacing)
         if (
             not self.turn_mod
             and self.player.turning_clock.elapsed >= self.player.turntime
@@ -357,7 +355,9 @@ class Gameplay(state.State):
             if not self.turn_mod:
                 return self.turn_start(mod)
             self.turning = True
-            return self.player.face(self.player.hfacing + 45, self.player.vfacing)
+            h = self.player.hfacing
+            target = -(-h // 45) * 45 if h % 45 != 0 else h + 45
+            return self.player.face(target, self.player.vfacing)
         if (
             not self.turn_mod
             and self.player.turning_clock.elapsed >= self.player.turntime
@@ -411,7 +411,7 @@ class Gameplay(state.State):
             self.player.walk(right=True, send=True)
 
     def move_up(self, mod):
-        tile_factor = 3.0 if self.map.get_tile_at(self.player.x, self.player.y, self.player.z) in ["deep_-water", "underwater"] else 1.0
+        tile_factor = 3.0 if self.map.get_tile_at(self.player.x, self.player.y, self.player.z) in ["deep_water", "underwater"] else 1.0
         if self.player.movement_clock.elapsed >= self.player.movetime * tile_factor:
             self.player.movement_clock.restart()
             mode = "run" if self.running else "walk"
@@ -538,7 +538,7 @@ class Gameplay(state.State):
         self.game.network.send(consts.CHANNEL_MISC, "server_message")
 
     def online_server_list(self, mod):
-        self.game.network.send(consts.CHANNEL_MISC, "who_online_m")
+        self.game.network.send(consts.CHANNEL_MISC, "who_online_m", {})
 
     def open_inventory(self, mod):
         if not self.player.dead: self.game.network.send(consts.CHANNEL_MISC, "open_inventory")

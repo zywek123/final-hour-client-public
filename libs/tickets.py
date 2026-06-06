@@ -10,13 +10,16 @@ class Tickets():
     def __init__(self, game):
         self.game=game
     
-    def view_tickets(self, tickets):
+    def view_tickets(self, tickets, moderator=False):
         ticket_menu = Menu(self.game, "tickets", False, True, True, False)
-        ticket_menu.add_items([
+        items = [
             ("submit a new ticket", self.create_ticket),
             ("view your tickets", lambda: self.list_tickets(tickets)),
-            ("close", self.game.pop)
-        ])
+        ]
+        if moderator:
+            items.append(("view all open tickets", lambda: self.game.network.send(consts.CHANNEL_MISC, "chat", {"message": "/tickets staff"})))
+        items.append(("close", self.game.pop))
+        ticket_menu.add_items(items)
         set_default_sounds(ticket_menu)
         self.game.append(ticket_menu)
 

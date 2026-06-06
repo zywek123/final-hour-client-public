@@ -6,6 +6,7 @@ import subprocess
 import time
 import queue
 from string import whitespace
+import re
 import contextlib
 import weakref
 import sys
@@ -221,11 +222,12 @@ class Game:
         self.append(self.input.run("Enter your username.", handeler=self.set_account2))
 
     def set_account2(self, username):
-        if username.strip()=="": 
+        if username.strip() == "":
             return self.cancel()
-        # change any whitespaces with dashes.
-        for i in whitespace:
-            username = username.replace(i, "-", -1)
+        if not self._USERNAME_RE.match(username):
+            return self.cancel(
+                "Invalid username. Use 3-32 characters: letters, digits, underscore or dash."
+            )
         options.set("username", username)
         self.replace(
             self.input.run("Enter your password.", handeler=self.set_account_done)
@@ -259,13 +261,13 @@ class Game:
         )
         self.replace(m)
 
+    _USERNAME_RE = re.compile(r'^[a-zA-Z0-9_\-]{3,32}$')
+    _MIN_PASSWORD_LEN = 6
+
     def create_account2(self, username):
-        # change any whitespaces with dashes.
-        for i in whitespace:
-            username = username.replace(i, "-", -1)
-        if len(username) < 3 or len(username) > 25:
+        if not self._USERNAME_RE.match(username):
             return self.cancel(
-                "Error. Make sure your username is in the range of 4-25 characters."
+                "Invalid username. Use 3-32 characters: letters, digits, underscore or dash."
             )
         options.set("username", username)
         self.replace(
@@ -273,8 +275,10 @@ class Game:
         )
 
     def create_account3(self, password):
-        if password.strip()=="":
+        if password.strip() == "":
             return self.cancel()
+        if len(password) < self._MIN_PASSWORD_LEN:
+            return self.cancel(f"Password must be at least {self._MIN_PASSWORD_LEN} characters.")
         if len(password) > 70:
             return self.cancel("Your password must be less than 70 characters.")
         options.set("password", password)

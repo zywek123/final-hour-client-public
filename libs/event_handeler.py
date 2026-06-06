@@ -25,6 +25,10 @@ class EventHandeler:
         menus.main_menu(self.game)
         speak("Account creation failed.", False)
 
+    def create_failed(self, data):
+        menus.main_menu(self.game)
+        speak(data["message"] if data and "message" in data else "Account creation failed.", False)
+
     def create_done(self, data):
         menus.main_menu(self.game)
         speak(
@@ -319,7 +323,7 @@ class EventHandeler:
     def tickets_menu(self, data):
         if not data:
             return
-        self.tickets.view_tickets(data["tickets"])
+        self.tickets.view_tickets(data["tickets"], moderator=data.get("moderator", False))
 
     def view_closed_tickets(self, data):
         if not data:
@@ -351,7 +355,6 @@ class EventHandeler:
         self.gameplay.player.double_tap_root_beer = data["value"]
 
     def speed_cola(self, data):
-        print("hi")
         if not data:
             return
         if "value" not in data:
